@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Nutrientes - PLAM</title>
+  <style>
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Adiciona o Service Worker -->
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then((registration) => {
+        console.log('Service Worker registrado com sucesso:', registration);
+      }).catch((error) => {
+        console.log('Falha ao registrar o Service Worker:', error);
+      });
+    });
+  }
+</script>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    input {
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    .input-laranja {
+      background-color: #f7c278;
+    }
+    .quantidade {
+      width: 150px;
+      display: block;
+    }
+    .resultado-verde {
+      background-color: #c5f4c5;
+      width: 100%;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Calculadora de Nutrientes</h2>
+
+    <div id="inputs"></div>
+
+    <label for="dose">Solução-mãe (mL):</label>
+    <input type="number" step="0.01" class="input-laranja" id="dose">
+
+    <label for="dosagem">Dosagem – mL:</label>
+    <input type="number" step="0.01" class="input-laranja" id="dosagem">
+
+    <label for="volume">Volume do aquário (L):</label>
+    <input type="number" step="0.1" class="input-laranja" id="volume">
+
+    <button onclick="calcular()">Calcular</button>
+
+    <label>Resultado:</label>
+    <textarea class="resultado-verde" rows="10" readonly id="resultado"></textarea>
+  </div>
+
+  <script>
+    const sais = {
+      "": {},
+      "Bicarbonato de Cálcio": { formula: "Ca(HCO₃)₂", massaMolar: 162.114, elementos: {Ca: 1, H: 2, C: 2, O: 6} },
+      "Bicarbonato de Potássio": { formula: "KHCO₃", massaMolar: 100.115, elementos: {K: 1, H: 1, C: 1, O: 3} },
+      "Carbonato de Cálcio": { formula: "CaCO₃", massaMolar: 100.087, elementos: {Ca: 1, C: 1, O: 3} },
+      "Carbonato de Potássio": { formula: "K₂CO₃", massaMolar: 138.205, elementos: {K: 2, C: 1, O: 3} },
+      "Cloreto de Cálcio Diidratado": { formula: "CaCl₂·2H₂O", massaMolar: 147.014, elementos: {Ca: 1, Cl: 2, H: 4, O: 2} },
+      "Cloreto de Magnésio Hexahidratado": { formula: "MgCl₂·6H₂O", massaMolar: 203.303, elementos: {Mg: 1, Cl: 2, H: 12, O: 6} },
+      "Cloreto de Potássio": { formula: "KCl", massaMolar: 74.551, elementos: {K: 1, Cl: 1} },
+      "Cloreto de Sódio": { formula: "NaCl", massaMolar: 58.443, elementos: {Na: 1, Cl: 1} },
+      "Fosfato de Cálcio Anidro": { formula: "Ca₃(PO₄)₂", massaMolar: 310.176, elementos: {Ca: 3, P: 2, O: 8} },
+      "Fosfato de Magnésio": { formula: "Mg₃(PO₄)₂", massaMolar: 262.857, elementos: {Mg: 3, P: 2, O: 8} },
+      "Fosfato Monopotássico": { formula: "KH₂PO₄", massaMolar: 136.085, elementos: {K: 1, H: 2, P: 1, O: 4} },
+      "Nitrato de Cálcio": { formula: "Ca(NO₃)₂", massaMolar: 164.088, elementos: {Ca: 1, N: 2, O: 6} },
+      "Nitrato de Magnésio Hexahidratado": { formula: "Mg(NO₃)₂·6H₂O", massaMolar: 256.410, elementos: {Mg: 1, N: 2, O: 12, H: 12} },
+      "Nitrato de Potássio": { formula: "KNO₃", massaMolar: 101.103, elementos: {K: 1, N: 1, O: 3} },
+      "Sulfato de Cálcio Hemidratado": { formula: "CaSO₄·0.5H₂O", massaMolar: 145.148, elementos: {Ca: 1, S: 1, O: 4.5, H: 1} },
+      "Sulfato de Ferro II": { formula: "FeSO₄", massaMolar: 151.908, elementos: {Fe: 1, S: 1, O: 4} },
+      "Sulfato de Ferro III": { formula: "Fe₂(SO₄)₃", massaMolar: 399.858, elementos: {Fe: 2, S: 3, O: 12} },
+      "Sulfato de Magnésio Anidro": { formula: "MgSO₄", massaMolar: 120.366, elementos: {Mg: 1, S: 1, O: 4} },
+      "Sulfato de Potássio Anidro": { formula: "K₂SO₄", massaMolar: 174.259, elementos: {K: 2, S: 1, O: 4} },
+      "Sulfato de Sódio Anidro": { formula: "Na₂SO₄", massaMolar: 142.043, elementos: {Na: 2, S: 1, O: 4} },
+    };
+
+    const massasAtomicas = {
+      H: 1.00794, C: 12.0107, O: 15.9994, N: 14.0067, P: 30.9738, K: 39.0983,
+      Na: 22.9897, Ca: 40.078, Mg: 24.305, S: 32.065, Cl: 35.453, Fe: 55.845
+    };
+
+    function criarSelect(id) {
+      const select = document.createElement("select");
+      select.id = id;
+      select.className = "input-laranja";
+      Object.keys(sais).forEach(sal => {
+        const opt = document.createElement("option");
+        opt.value = sal;
+        opt.textContent = sal === "" ? "-- Selecione um sal --" : sal;
+        select.appendChild(opt);
+      });
+      return select;
+    }
+
+    const containerInputs = document.getElementById("inputs");
+    for (let i = 1; i <= 4; i++) {
+      const label = document.createElement("label");
+      label.htmlFor = "sal" + i;
+      label.textContent = "Sal " + i + ":";
+
+      const select = criarSelect("sal" + i);
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "0.001";
+      input.placeholder = "000.000";
+      input.className = "input-laranja quantidade";
+      input.id = "qtd" + i;
+
+      containerInputs.appendChild(label);
+      containerInputs.appendChild(select);
+      containerInputs.appendChild(input);
+    }
+
+    function calcular() {
+      try {
+        const dose = parseFloat(document.getElementById("dose").value);
+        const dosagem = parseFloat(document.getElementById("dosagem").value);
+        const volume = parseFloat(document.getElementById("volume").value);
+
+        if (isNaN(dose) || isNaN(dosagem) || isNaN(volume) || dose <= 0 || dosagem <= 0 || volume <= 0) {
+          throw new Error("Preencha todos os campos com valores válidos (números positivos).");
+        }
+
+        const fatorDiluicao = dosagem / dose;
+        const elementosTotais = {};
+
+        // Cálculo para cada sal selecionado
+        for (let i = 1; i <= 4; i++) {
+          const salSelecionado = document.getElementById("sal" + i).value;
+          const gramas = parseFloat(document.getElementById("qtd" + i).value);
+
+          if (salSelecionado && !isNaN(gramas) && gramas > 0) {
+            const sal = sais[salSelecionado];
+            const molesSal = gramas / sal.massaMolar;
+
+            // Para cada elemento no sal
+            for (const elemento in sal.elementos) {
+              const molesElemento = molesSal * sal.elementos[elemento];
+              const massaElemento = molesElemento * massasAtomicas[elemento]; // em gramas
+              
+              // Acumula a massa do elemento (convertendo para mg e aplicando fator de diluição)
+              elementosTotais[elemento] = (elementosTotais[elemento] || 0) + 
+                                        (massaElemento * 1000 * fatorDiluicao);
+            }
+          }
+        }
+
+        // Calcula ppm (mg/L) na ordem especificada
+        let resultado = "";
+        
+        // Grupos moleculares (CÁLCULO CORRIGIDO)
+        if (elementosTotais["N"] && elementosTotais["O"]) {
+          const no3 = (elementosTotais["N"] / massasAtomicas["N"] * (14.0067 + 3*15.9994)) / volume;
+          resultado += `NO₃: ${no3.toFixed(4)} mg/L\n`;  // 0.5002
+        }
+        
+        if (elementosTotais["P"] && elementosTotais["O"]) {
+          const po4 = (elementosTotais["P"] / massasAtomicas["P"] * (30.9738 + 4*15.9994)) / volume;
+          resultado += `PO₄: ${po4.toFixed(4)} mg/L\n`;  // 0.1902
+        }
+        
+        if (elementosTotais["S"] && elementosTotais["O"]) {
+          const so4 = (elementosTotais["S"] / massasAtomicas["S"] * (32.065 + 4*15.9994)) / volume;
+          resultado += `SO₄: ${so4.toFixed(4)} mg/L\n`;  // 2.33
+        }
+        
+        // Elementos individuais (mantido igual)
+        const elementosOrdem = ["N", "P", "S", "K", "Mg", "Ca", "Fe"];
+        for (const elemento of elementosOrdem) {
+          if (elementosTotais[elemento]) {
+            const ppm = elementosTotais[elemento] / volume;
+            resultado += `${elemento}: ${ppm.toFixed(4)} mg/L\n`;
+          }
+        }
+
+        // Cálculo da razão atômica N:P (mantido igual)
+        if (elementosTotais["N"] && elementosTotais["P"]) {
+          const razaoNP = (elementosTotais["N"] / massasAtomicas["N"]) / 
+                          (elementosTotais["P"] / massasAtomicas["P"]);
+          resultado += `\nRazão atômica N:P ≈ ${razaoNP.toFixed(2)}:1`;
+        }
+
+        document.getElementById("resultado").value = resultado;
+
+      } catch (error) {
+        document.getElementById("resultado").value = `Erro: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html
