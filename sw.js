@@ -1,11 +1,49 @@
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<meta name="theme-color" content="#2e7d32">
+const CACHE_NAME = 'plam-cache-v1'; // Nome do cache
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png', // Ícone de 192x192
+  '/icons/icon-512.png', // Ícone de 512x512
+  '/sw.js',
+  '/styles.css',  // Adicione aqui os arquivos CSS se necessário
+  '/scripts.js',  // Adicione aqui seus arquivos JS se necessário
+];
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker registrado com sucesso'))
-      .catch(error => console.error('Erro ao registrar o Service Worker:', error));
-  }
-</script>
+self.addEventListener('install', (event) => {
+  // Realiza o cache durante a instalação do Service Worker
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Cache aberto e recursos armazenados');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  // Remove caches antigos quando o novo Service Worker é ativado
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            // Apaga caches antigos
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  // Intercepta as requisições e responde com o conteúdo cacheado se disponível
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        return response || fetch(event.request); // Se não encontrado no cache, faz uma requisição normal
+      })
+  );
+});
