@@ -1,8 +1,10 @@
 {
   "name": "Seu App",
   "short_name": "App",
+  "description": "Descrição breve do seu app",
   "start_url": ".",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
@@ -22,6 +24,12 @@
       "type": "image/png"
     },
     {
+      "src": "icon_180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icon_256x256.png",
       "sizes": "256x256",
       "type": "image/png"
@@ -33,33 +41,3 @@
     }
   ]
 }
-2. Na index.html, inclua os meta tags e link para o manifest:
-html
-Copiar
-Editar
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="icon_32x32.png">
-<link rel="apple-touch-icon" sizes="128x128" href="icon_128x128.png">
-<meta name="theme-color" content="#ffffff">
-⚠️ Para iPhone/iPad (Safari iOS), o apple-touch-icon é o mais importante. Você pode criar também:
-
-html
-Copiar
-Editar
-<link rel="apple-touch-icon" sizes="180x180" href="icon_180x180.png">
-Se você puder gerar um icon_180x180.png, adicione essa linha.
-
-3. No service-worker.js, não precisa declarar ícones, apenas certifique-se de que os arquivos estejam incluídos no cache se for usar caching manual, como:
-js
-Copiar
-Editar
-const cacheFiles = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon_32x32.png',
-  '/icon_64x64.png',
-  '/icon_128x128.png',
-  '/icon_256x256.png',
-  '/icon_512x512.png'
-];
