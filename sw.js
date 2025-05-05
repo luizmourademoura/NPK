@@ -5,6 +5,7 @@ const urlsToCache = [
   '/manifest.json',
   '/icons/icon_192x192.png', // Ícone de 192x192
   '/icons/icon_512x512.png', // Ícone de 512x512
+  '/icon_180x180.png'
   '/sw.js',
   '/styles.css',  // Adicione aqui os arquivos CSS se necessário
   '/scripts.js',  // Adicione aqui seus arquivos JS se necessário
