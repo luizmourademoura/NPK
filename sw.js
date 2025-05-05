@@ -3,8 +3,8 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.png', // Ícone de 192x192
-  '/icons/icon-512.png', // Ícone de 512x512
+  '/icons/icon_192x192.png', // Ícone de 192x192
+  '/icons/icon_512x512.png', // Ícone de 512x512
   '/sw.js',
   '/styles.css',  // Adicione aqui os arquivos CSS se necessário
   '/scripts.js',  // Adicione aqui seus arquivos JS se necessário
