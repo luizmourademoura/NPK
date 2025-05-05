@@ -1,10 +1,14 @@
 {
   "name": "NPK Calculadora",
   "short_name": "NPK Calc",
-  "start_url": ".",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#2e7d32",
+  "description": "Calculadora de nutrientes NPK para fertilizantes de aquário.",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "icons/icon_192x192.png",
