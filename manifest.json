@@ -1,6 +1,6 @@
 {
-  "name": "NPK Calc",
-  "short_name": "PLAM",
+  "name": "NPK Calculadora",
+  "short_name": "NPK Calc",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
