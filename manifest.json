@@ -1,7 +1,7 @@
 {
-  "name": "Seu App",
-  "short_name": "App",
-  "description": "Descrição breve do seu app",
+  "name": "NPKCalc",
+  "short_name": "NPK",
+  "description": "Calculo de NPK para aquarios",
   "start_url": ".",
   "display": "standalone",
   "orientation": "portrait",
